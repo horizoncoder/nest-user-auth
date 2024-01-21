@@ -1,8 +1,41 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import * as dotenv from 'dotenv';
+import {RoleService} from "./role/role.service";
+async function seedRoles(roleService: RoleService) {
+  const roles = ['admin', 'user', 'moderator'];
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  await app.listen(3000);
+  for (const roleName of roles) {
+    let role = await roleService.findOneByName(roleName);
+
+    if (!role) {
+      role = await roleService.create({ name: roleName });
+    }
+  }
 }
+async function bootstrap() {
+  dotenv.config();
+
+  const app = await NestFactory.create(AppModule);
+
+  const config = new DocumentBuilder()
+      .setTitle('Users API Title')
+      .setDescription('Your API Description')
+      .setVersion('1.0')
+      .addTag('nestjs')
+      .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
+  const roleService = app.get(RoleService);
+
+  //seed the role  table if you need
+  if(process.env.SEED_ROLES){
+    await seedRoles(roleService);
+  }
+
+  await app.listen(5000);
+}
+
 bootstrap();
