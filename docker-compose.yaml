@@ -2,19 +2,18 @@ version: '3'
 services:
   app:
     build:
-      context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "5000:5000"
     depends_on:
       - postgres
     environment:
-      - DATABASE_URL=postgres://admin:admin@postgres:5432/yourdbname
+      - DATABASE_URL=postgres://admin:admin@postgres:5432/users
   postgres:
     image: postgres:latest
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
-      POSTGRES_DB: yourdbname
+      POSTGRES_DB: users
     ports:
       - "5432:5432"
