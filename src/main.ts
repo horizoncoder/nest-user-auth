@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as dotenv from 'dotenv';
 import {RoleService} from "./role/role.service";
+import * as cookieParser from 'cookie-parser';
 async function seedRoles(roleService: RoleService) {
   const roles = ['admin', 'user', 'moderator'];
 
@@ -20,10 +21,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const config = new DocumentBuilder()
-      .setTitle('Users API Title')
-      .setDescription('Your API Description')
+      .setTitle('Users API ')
+      .setDescription('User API Description')
       .setVersion('1.0')
-      .addTag('nestjs')
+      .addBearerAuth()
       .build();
 
   const document = SwaggerModule.createDocument(app, config);
@@ -34,7 +35,7 @@ async function bootstrap() {
   if(process.env.SEED_ROLES){
     await seedRoles(roleService);
   }
-
+  app.use(cookieParser());
   await app.listen(5000);
 }
 
