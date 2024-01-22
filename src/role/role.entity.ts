@@ -1,15 +1,16 @@
 // role.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { User } from '../user/user.entity';
+import { UserRoleEnum } from '../enums/role.enum';
 
 @Entity()
 export class Role {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column()
-    name: string;
+  @Column({ type: 'enum', enum: UserRoleEnum, default: UserRoleEnum.User })
+  name: UserRoleEnum;
 
-    @OneToMany(() => User, user => user.role)
-    users: User[];
+  @OneToMany(() => User, (user) => user.role)
+  users: User[];
 }

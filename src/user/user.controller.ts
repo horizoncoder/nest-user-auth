@@ -1,24 +1,40 @@
-import { Controller, Get, Param, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  UseGuards,
+  Req,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './user.entity';
-import {ApiTags} from "@nestjs/swagger";
+import { ApiTags, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { AccessTokenGuard } from '../guard/access-token.guard';
 @ApiTags('User')
 @Controller('users')
 export class UserController {
-    constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) {}
 
-    @Get()
-    async findAll(): Promise<User[]> {
-        return this.userService.findAll();
-    }
+  @UseGuards(AccessTokenGuard)
+  @Get('me')
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'User found', type: User })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async getMe(@Req() req: any): Promise<User> {
+    try {
+      const userId = req.user.id;
 
-    @Get(':id')
-    async findOne(@Param('id') id: number): Promise<User> {
-        return this.userService.findOne(id);
-    }
+      const user = await this.userService.findUser(userId);
 
-    @Post()
-    async create(@Body() userData: Partial<User>): Promise<User> {
-        return this.userService.create(userData);
+      if (!user) {
+        throw new NotFoundException({
+          message: 'User not found',
+        });
+      }
+
+      return user;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
     }
+  }
 }
