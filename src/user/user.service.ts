@@ -4,6 +4,7 @@ import { User } from './user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { UserRoleEnum } from '../enums/role.enum';
+import { UserInterface } from '../interfeces/user.interfaces';
 
 @Injectable()
 export class UserService {
@@ -41,7 +42,7 @@ export class UserService {
     return user;
   }
 
-  async findUser(id: number): Promise<any> {
+  async findUser(id: number): Promise<UserInterface> {
     const user = await this.userRepository.findOne({
       where: { id },
       relations: ['role'],
@@ -60,6 +61,20 @@ export class UserService {
       role: this.mapRoleIdToRole(user.role?.id),
     };
   }
+
+  async findAllUsers(): Promise<UserInterface[]> {
+    const users = await this.userRepository.find({ relations: ['role'] });
+
+    return users.map((user) => ({
+      id: user.id,
+      name: user.name,
+      surname: user.surname,
+      email: user.email,
+      isBanned: user.isBanned,
+      role: this.mapRoleIdToRole(user.role?.id),
+    }));
+  }
+
   async isUserExist(email: string): Promise<boolean> {
     const user = await this.userRepository.findOne({
       where: {

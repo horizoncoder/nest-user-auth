@@ -1,17 +1,22 @@
 import {
   Controller,
   Get,
-  UseGuards,
-  Req,
-  NotFoundException,
   InternalServerErrorException,
+  NotFoundException,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './user.entity';
-import { ApiTags, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AccessTokenGuard } from '../guard/access-token.guard';
+import { UserInterface } from '../interfeces/user.interfaces';
+import { Roles } from '../decorators/role.decorator';
+import { UserRoleEnum } from '../enums/role.enum';
+import { RolesGuard } from '../guard/role.guard';
+
 @ApiTags('User')
-@Controller('users')
+@Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -20,7 +25,7 @@ export class UserController {
   @ApiBearerAuth()
   @ApiResponse({ status: 200, description: 'User found', type: User })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async getMe(@Req() req: any): Promise<User> {
+  async getMe(@Req() req: any): Promise<UserInterface> {
     try {
       const userId = req.user.id;
 
@@ -36,5 +41,14 @@ export class UserController {
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
+  }
+
+  @Get('all')
+  @Roles(UserRoleEnum.Moderator, UserRoleEnum.Admin)
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'List of users', type: [User] })
+  async findAllUsers(): Promise<UserInterface[]> {
+    return this.userService.findAllUsers();
   }
 }
