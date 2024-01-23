@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './user.entity';
-import { Repository } from 'typeorm';
+import { Repository, DeleteResult } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { UserRoleEnum } from '../enums/role.enum';
 import { UserInterface } from '../interfeces/user.interfaces';
@@ -23,10 +23,14 @@ export class UserService {
         return UserRoleEnum.User;
     }
   }
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find({
-      relations: ['role'],
-    });
+  async softDeleteUser(id: number): Promise<DeleteResult> {
+    const user = await this.findUser(id);
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    return this.userRepository.softDelete(id);
   }
   async findOneByEmail(email: string): Promise<User> {
     const user = await this.userRepository.findOne({
@@ -62,7 +66,14 @@ export class UserService {
     };
   }
 
-  async findAllUsers(page: number = 1, limit: number = 10): Promise<{ data: UserInterface[], totalPages: number, currentPage: number }> {
+  async findAllUsers(
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{
+    data: UserInterface[];
+    totalPages: number;
+    currentPage: number;
+  }> {
     const [users, totalUsers] = await this.userRepository.findAndCount({
       relations: ['role'],
       skip: (page - 1) * limit,

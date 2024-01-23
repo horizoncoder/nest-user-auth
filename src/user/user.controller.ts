@@ -6,13 +6,14 @@ import {
   Req,
   UseGuards,
   Query,
+  Delete,
   ParseIntPipe,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './user.entity';
 import { ApiBearerAuth, ApiResponse, ApiTags, ApiQuery } from '@nestjs/swagger';
 import { AccessTokenGuard } from '../guard/access-token.guard';
-import { UserInterface } from '../interfeces/user.interfaces';
+import { UserInterface, UserReq } from '../interfeces/user.interfaces';
 import { Roles } from '../decorators/role.decorator';
 import { UserRoleEnum } from '../enums/role.enum';
 import { RolesGuard } from '../guard/role.guard';
@@ -27,7 +28,7 @@ export class UserController {
   @ApiBearerAuth()
   @ApiResponse({ status: 200, description: 'User found', type: User })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async getMe(@Req() req: any): Promise<UserInterface> {
+  async getMe(@Req() req: UserReq): Promise<UserInterface> {
     try {
       const userId = req.user.id;
 
@@ -79,6 +80,21 @@ export class UserController {
         currentPage: result.currentPage,
       };
     } catch (err: unknown) {
+      throw new InternalServerErrorException(err);
+    }
+  }
+  @UseGuards(AccessTokenGuard)
+  @Delete('/soft')
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'User successfully soft deleted' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async softDeleteUser(@Req() req: UserReq) {
+    try {
+      const userId = req.user.id;
+      await this.userService.softDeleteUser(userId);
+      return { message: 'User successfully soft deleted' };
+    } catch (err: unknown) {
+      console.log(err);
       throw new InternalServerErrorException(err);
     }
   }
