@@ -8,8 +8,12 @@ import { User } from './user.entity';
 import { Repository, DeleteResult } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { UserRoleEnum } from '../enums/role.enum';
-import { UserInterface } from '../interfeces/user.interfaces';
+import {
+  CreateUserInterface,
+  UserInterface,
+} from '../interfeces/user.interfaces';
 import { BanDto, UpdateUserDto } from './user.dto';
+import { DeepPartial } from 'typeorm';
 
 @Injectable()
 export class UserService {
@@ -145,8 +149,8 @@ export class UserService {
 
     return user;
   }
-  async create(userData: any): Promise<any> {
-    const user = this.userRepository.create(userData);
+  async create(userData: CreateUserInterface): Promise<User> {
+    const user = this.userRepository.create(userData as DeepPartial<User>);
     return this.userRepository.save(user);
   }
 

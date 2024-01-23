@@ -1,5 +1,6 @@
 import { UserRoleEnum } from '../enums/role.enum';
 import { Request } from 'express';
+import { User } from '../user/user.entity';
 
 export interface UserInterface {
   id: number;
@@ -14,4 +15,12 @@ export interface UserReq extends Request {
     id: number;
     role: number;
   };
+}
+export interface CreateUserInterface {
+  name: string;
+  surname: string;
+  email: string;
+  password: string;
+  isBanned: boolean;
+  role: number;
 }

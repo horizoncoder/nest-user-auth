@@ -14,8 +14,8 @@ export class AuthService {
   ) {}
 
   async generateTokens(payload: {
-    role: number;
     id: number;
+    role: number;
   }): Promise<TokensInterface> {
     return {
       accessToken: await this.jwtService.signAsync(payload, {
@@ -45,7 +45,7 @@ export class AuthService {
       isBanned: false,
     });
 
-    return await this.generateTokens({ id: newUser.id, role: newUser.role });
+    return await this.generateTokens({ id: newUser.id, role: newUser.role.id });
   }
 
   async signIn(signInDto: SignInDto): Promise<TokensInterface> {
