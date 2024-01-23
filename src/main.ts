@@ -77,6 +77,10 @@ async function bootstrap() {
     await seedUsers(userService);
   }
   app.use(cookieParser());
+  app.enableCors({
+    origin: process.env.ALLOW_DOMAIN,
+    credentials: true,
+  });
   await app.listen(5000);
 }
 

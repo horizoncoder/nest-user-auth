@@ -1,12 +1,13 @@
 import {
   Body,
   Controller,
-  InternalServerErrorException,
   Post,
   Req,
   Request,
   Res,
   UseGuards,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignInDto, SignUpDto } from './auth.dto';
@@ -48,6 +49,7 @@ export class AuthController {
     status: 401,
     description: 'Unauthorized - Invalid credentials',
   })
+  @UsePipes(ValidationPipe)
   async signIn(
     @Res() res: Response,
     @Body() signInDto: SignInDto,
@@ -57,7 +59,7 @@ export class AuthController {
       this.setCookies(res, tokens.accessToken, tokens.refreshToken);
       res.status(200).send({ message: 'successfully' });
     } catch (err: unknown) {
-      throw new InternalServerErrorException(err);
+      throw err;
     }
   }
   @Post('sign-up')
@@ -67,13 +69,14 @@ export class AuthController {
     status: 401,
     description: 'Unauthorized - Invalid credentials',
   })
+  @UsePipes(ValidationPipe)
   async signUp(@Res() res: Response, @Body() data: SignUpDto): Promise<void> {
     try {
       const tokens = await this.authService.signUp(data);
       this.setCookies(res, tokens.accessToken, tokens.refreshToken);
       res.status(201).send({ message: 'successfully' });
     } catch (err: unknown) {
-      throw new InternalServerErrorException(err);
+      throw err;
     }
   }
   @UseGuards(RefreshTokenGuard)
@@ -95,7 +98,7 @@ export class AuthController {
       this.setCookies(res, tokens.accessToken, tokens.refreshToken);
       res.status(200).send({ message: 'successfully' });
     } catch (err: unknown) {
-      throw new InternalServerErrorException(err);
+      throw err;
     }
   }
 }

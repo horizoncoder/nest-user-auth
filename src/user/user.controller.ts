@@ -1,7 +1,6 @@
 import {
   Controller,
   Get,
-  InternalServerErrorException,
   NotFoundException,
   Req,
   UseGuards,
@@ -10,6 +9,8 @@ import {
   Patch,
   Body,
   ParseIntPipe,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './user.entity';
@@ -43,8 +44,8 @@ export class UserController {
       }
 
       return user;
-    } catch (error) {
-      throw new InternalServerErrorException(error);
+    } catch (error: unknown) {
+      throw error;
     }
   }
 
@@ -82,7 +83,7 @@ export class UserController {
         currentPage: result.currentPage,
       };
     } catch (err: unknown) {
-      throw new InternalServerErrorException(err);
+      throw err;
     }
   }
 
@@ -97,7 +98,7 @@ export class UserController {
       await this.userService.softDeleteUser(userId);
       return { message: 'User successfully soft deleted' };
     } catch (err: unknown) {
-      throw new InternalServerErrorException(err);
+      throw err;
     }
   }
   @UseGuards(AccessTokenGuard)
@@ -108,6 +109,7 @@ export class UserController {
     description: 'User successfully updated',
   })
   @ApiResponse({ status: 404, description: 'User not found' })
+  @UsePipes(ValidationPipe)
   async updateUserFields(
     @Req() req: UserReq,
     @Body() updateUserDto: UpdateUserDto,
@@ -120,7 +122,7 @@ export class UserController {
       );
       return { message: 'User successfully updated', user: updatedUser };
     } catch (err: unknown) {
-      throw new InternalServerErrorException(err);
+      throw err;
     }
   }
 
@@ -140,7 +142,7 @@ export class UserController {
       const updatedUser = await this.userService.banUser(banDto);
       return { message: 'User banned status change', user: updatedUser };
     } catch (err: unknown) {
-      throw new InternalServerErrorException(err);
+      throw err;
     }
   }
 }
