@@ -1,10 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { Repository, DeleteResult } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { UserRoleEnum } from '../enums/role.enum';
 import { UserInterface } from '../interfeces/user.interfaces';
+import { BanDto, UpdateUserDto } from './user.dto';
 
 @Injectable()
 export class UserService {
@@ -65,7 +70,31 @@ export class UserService {
       role: this.mapRoleIdToRole(user.role?.id),
     };
   }
+  async updateUserFields(
+    id: number,
+    updateUserDto: UpdateUserDto,
+  ): Promise<UserInterface> {
+    const result = await this.userRepository.update(id, updateUserDto);
 
+    if (result.affected === 0) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    return await this.findUser(id);
+  }
+
+  async banUser(banDto: BanDto): Promise<UserInterface> {
+    const { id, isBanned } = banDto;
+    const user = await this.findUser(id);
+
+    if (user.role === UserRoleEnum.Admin) {
+      throw new BadRequestException('Admins cannot be banned');
+    }
+
+    await this.userRepository.update(id, { isBanned });
+
+    return await this.findUser(id);
+  }
   async findAllUsers(
     page: number = 1,
     limit: number = 10,
