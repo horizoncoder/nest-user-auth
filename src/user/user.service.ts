@@ -62,10 +62,16 @@ export class UserService {
     };
   }
 
-  async findAllUsers(): Promise<UserInterface[]> {
-    const users = await this.userRepository.find({ relations: ['role'] });
+  async findAllUsers(page: number = 1, limit: number = 10): Promise<{ data: UserInterface[], totalPages: number, currentPage: number }> {
+    const [users, totalUsers] = await this.userRepository.findAndCount({
+      relations: ['role'],
+      skip: (page - 1) * limit,
+      take: limit,
+    });
 
-    return users.map((user) => ({
+    const totalPages = Math.ceil(totalUsers / limit);
+
+    const mappedUsers = users.map((user) => ({
       id: user.id,
       name: user.name,
       surname: user.surname,
@@ -73,8 +79,9 @@ export class UserService {
       isBanned: user.isBanned,
       role: this.mapRoleIdToRole(user.role?.id),
     }));
-  }
 
+    return { data: mappedUsers, totalPages, currentPage: page };
+  }
   async isUserExist(email: string): Promise<boolean> {
     const user = await this.userRepository.findOne({
       where: {

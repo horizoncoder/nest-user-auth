@@ -5,10 +5,12 @@ import {
   NotFoundException,
   Req,
   UseGuards,
+  Query,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './user.entity';
-import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags, ApiQuery } from '@nestjs/swagger';
 import { AccessTokenGuard } from '../guard/access-token.guard';
 import { UserInterface } from '../interfeces/user.interfaces';
 import { Roles } from '../decorators/role.decorator';
@@ -47,8 +49,37 @@ export class UserController {
   @Roles(UserRoleEnum.Moderator, UserRoleEnum.Admin)
   @UseGuards(AccessTokenGuard, RolesGuard)
   @ApiBearerAuth()
+  @ApiQuery({
+    name: 'page',
+    type: Number,
+    required: true,
+    description: 'Page number',
+  })
+  @ApiQuery({
+    name: 'limit',
+    type: Number,
+    required: true,
+    description: 'Number of items per page',
+  })
   @ApiResponse({ status: 200, description: 'List of users', type: [User] })
-  async findAllUsers(): Promise<UserInterface[]> {
-    return this.userService.findAllUsers();
+  async findAllUsers(
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('limit', ParseIntPipe) limit: number = 10,
+  ): Promise<{
+    data: UserInterface[];
+    totalPages: number;
+    currentPage: number;
+  }> {
+    try {
+      const result = await this.userService.findAllUsers(page, limit);
+
+      return {
+        data: result.data,
+        totalPages: result.totalPages,
+        currentPage: result.currentPage,
+      };
+    } catch (err: unknown) {
+      throw new InternalServerErrorException(err);
+    }
   }
 }
