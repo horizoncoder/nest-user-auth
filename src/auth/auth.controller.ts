@@ -11,9 +11,10 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignInDto, SignUpDto } from './auth.dto';
-import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { RefreshTokenGuard } from '../guard/refresh-token.guard';
 import { Response } from 'express';
+import { AccessTokenGuard } from "../guard/access-token.guard";
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
@@ -96,6 +97,25 @@ export class AuthController {
       const refreshToken = authorizationHeader.slice('Bearer '.length);
       const tokens = await this.authService.refreshTokens(refreshToken);
       this.setCookies(res, tokens.accessToken, tokens.refreshToken);
+      res.status(200).send({ message: 'successfully' });
+    } catch (err: unknown) {
+      throw err;
+    }
+  }
+
+  @Post('logOut')
+  @ApiResponse({ status: 200, description: 'User successfully log out' })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid credentials',
+  })
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth()
+  async logOut(@Res() res: Response): Promise<void> {
+    try {
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
       res.status(200).send({ message: 'successfully' });
     } catch (err: unknown) {
       throw err;

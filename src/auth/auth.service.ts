@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import { SignInDto, SignUpDto } from './auth.dto';
@@ -33,7 +33,7 @@ export class AuthService {
     const { email, name, surname, password } = data;
     const existingUser = await this.userService.isUserExist(data.email);
     if (existingUser) {
-      throw new Error('Email is already taken');
+      throw new BadRequestException('Email is already taken');
     }
     const hashedPassword = await this.userService.hashPassword(password);
     const newUser = await this.userService.create({
@@ -79,7 +79,7 @@ export class AuthService {
     const user = await this.userService.findOneByEmail(email);
 
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
 
     // Generate a new access token
